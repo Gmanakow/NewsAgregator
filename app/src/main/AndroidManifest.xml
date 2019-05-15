@@ -11,10 +11,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".ItemDisplayerActivity"></activity>
+        <activity android:name=".URLActivity"></activity>
+        <activity android:name=".ItemDisplayerActivity" />
 
         <service
-            android:name=".RssFisher"
+            android:name=".Rss.RssFisher"
             android:enabled="true"
             android:exported="true" />
 

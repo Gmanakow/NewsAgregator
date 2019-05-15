@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
-import java.util.ArrayList;
+import manakov.sample.newsagg02.Rss.RssItemPack;
 
 public class FishNet extends BroadcastReceiver {
     private String TAG = "FishNet";
