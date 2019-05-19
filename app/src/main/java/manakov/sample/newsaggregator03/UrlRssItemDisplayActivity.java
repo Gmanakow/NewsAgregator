@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
@@ -25,7 +26,6 @@ public class UrlRssItemDisplayActivity extends AppCompatActivity{
     private RecyclerView recyclerView;
     private CustomRecyclerViewRssItemAdapter adapter;
     private ArrayList<RssItem> list;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +50,13 @@ public class UrlRssItemDisplayActivity extends AppCompatActivity{
         titleDisplayView.setText(currentUrl);
 
         list = new ArrayList<>();
+        list.clear();
         list.addAll(
                 application
                 .dataBase
                 .rssItemDao()
                 .getAllByUrlId(currentId)
         );
-
         adapter = new CustomRecyclerViewRssItemAdapter(list);
         recyclerView.setAdapter(adapter);
     }
@@ -82,7 +82,7 @@ public class UrlRssItemDisplayActivity extends AppCompatActivity{
                 application
                 .dataBase
                 .rssItemDao()
-                .getAll()
+                .getAllByUrlId(currentId)
         );
         adapter.setList(list);
         adapter.notifyDataSetChanged();

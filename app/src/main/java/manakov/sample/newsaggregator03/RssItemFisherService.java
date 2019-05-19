@@ -33,83 +33,100 @@ public class RssItemFisherService extends IntentService {
     }
 
     @Override
-    public void onHandleIntent(Intent intent){
-        while (true)
-        {
-            NewsAggApplication application = (NewsAggApplication) getApplication();
-            currentTitle = intent.getExtras().getString("Title");
-            currentUrl = intent.getExtras().getString("Url");
-            currentId = intent.getExtras().getInt("Id");
+    public void onHandleIntent(Intent intent) {
 
-            InputStream inputStream = null;
-            Intent broadcastIntent = new Intent();
-            try {
-                URL url = new URL(currentUrl);
-                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        NewsAggApplication application = (NewsAggApplication) getApplication();
 
-                if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
+        ArrayList<UrlItem> items = new ArrayList<>();
+
+        while (true) {
+
+            items.addAll(
                     application
                             .dataBase
-                            .rssItemDao()
-                            .deleteAllByUrlId(currentId);
-                    inputStream = conn.getInputStream();
+                            .urlItemDao()
+                            .getAll()
+            );
 
-                    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-                    DocumentBuilder builder = factory.newDocumentBuilder();
+            for (int i = 0; i < items.size(); i++) {
+                currentTitle = items.get(i).getTitle();
+                currentUrl = items.get(i).getUrl();
+                currentId = items.get(i).getId();
 
-                    Document document = builder.parse(inputStream);
-                    Element element = document.getDocumentElement();
+                Log.d(TAG + " fishy", currentTitle + " " + currentId);
 
-                    NodeList nodeList = element.getElementsByTagName(NewsAggApplication.item);
+                InputStream inputStream = null;
+                Intent broadcastIntent = new Intent();
+                try {
+                    URL url = new URL(currentUrl);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
-                    for (int j = 0; j < nodeList.getLength(); j++) {
-                        Element entry = (Element) nodeList.item(j);
-
-                        Element elementTitle = (Element) entry.getElementsByTagName("title").item(0);
-                        Element elementDate = (Element) entry.getElementsByTagName("pubDate").item(0);
-                        Element elementLink = (Element) entry.getElementsByTagName("link").item(0);
-                        Element elementDescription = (Element) entry.getElementsByTagName("description").item(0);
-
-                        RssItem item = new RssItem(
-                                elementTitle.getFirstChild().getNodeValue(),
-                                elementDate.getFirstChild().getNodeValue(),
-                                elementLink.getFirstChild().getNodeValue(),
-                                elementDescription.getFirstChild().getNodeValue(),
-                                currentId
-                        );
+                    if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
                         application
                                 .dataBase
                                 .rssItemDao()
-                                .insertAll(
-                                        item
-                                );
+                                .deleteAllByUrlId(currentId);
+
+                        inputStream = conn.getInputStream();
+
+                        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                        DocumentBuilder builder = factory.newDocumentBuilder();
+
+                        Document document = builder.parse(inputStream);
+                        Element element = document.getDocumentElement();
+
+                        NodeList nodeList = element.getElementsByTagName(NewsAggApplication.item);
+
+                        for (int j = 0; j < nodeList.getLength(); j++) {
+                            Element entry = (Element) nodeList.item(j);
+
+                            Element elementTitle = (Element) entry.getElementsByTagName("title").item(0);
+                            Element elementDate = (Element) entry.getElementsByTagName("pubDate").item(0);
+                            Element elementLink = (Element) entry.getElementsByTagName("link").item(0);
+                            Element elementDescription = (Element) entry.getElementsByTagName("description").item(0);
+
+                            RssItem item = new RssItem(
+                                    elementTitle.getFirstChild().getNodeValue(),
+                                    elementDate.getFirstChild().getNodeValue(),
+                                    elementLink.getFirstChild().getNodeValue(),
+                                    elementDescription.getFirstChild().getNodeValue(),
+                                    currentId
+                            );
+                            application
+                                    .dataBase
+                                    .rssItemDao()
+                                    .insertAll(
+                                            item
+                                    );
+
+                        }
+                        broadcastIntent.setAction("Success" + currentId);
                     }
-                    broadcastIntent.setAction("Success" + currentId);
-                }
-                broadcastIntent.putExtra("urlID", currentUrl);
-                sendBroadcast(broadcastIntent);
-            } catch (Exception e) {
-                Log.e(TAG, e.getLocalizedMessage());
-            } finally {
-                try {
-                    if (inputStream != null) inputStream.close();
-                } catch (IOException e) {
-                    Log.e(TAG, e.getLocalizedMessage());
+                    broadcastIntent.putExtra("urlID", currentUrl);
+                    sendBroadcast(broadcastIntent);
+                } catch (Exception e) {
+                    Log.e(TAG + "here", e.getLocalizedMessage());
+                } finally {
+                    try {
+                        if (inputStream != null) inputStream.close();
+                    } catch (IOException e) {
+                        Log.e(TAG + "or here", e.getLocalizedMessage());
+                    }
                 }
             }
             try {
-                    Thread.sleep(
-                        Math.round(
-                                (application
+                Thread.sleep(
+                        Math.round((
+                                application
                                         .dataBase
                                         .timeOffsetDao()
                                         .get()
                                         .get(0)
-                                        .getDelay())
-                        ) * 60 * 1000
-                    );
-            } catch (Exception e) {
-                Log.e(TAG, e.getLocalizedMessage(), e);
+                                        .getDelay()
+                        ) * 60 * 1000)
+                );
+            } catch (Exception e){
+                Log.e(TAG, "sleepFail");
             }
         }
     }

@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.LoginFilter;
 import android.util.Log;
 import android.view.View;
 
@@ -53,7 +54,7 @@ public class UrlListActivity extends AppCompatActivity {
                 int position = viewHolder.getAdapterPosition();
                 Intent intent = new Intent(view.getContext(), UrlRssItemDisplayActivity.class);
                 intent.putExtra("Title", list.get(position).getTitle());
-                intent.putExtra("ID", list.get(position).getId());
+                intent.putExtra("ID"   , list.get(position).getId());
                 startActivityForResult(intent, NewsAggApplication.showUrlTag);
             }
         };
@@ -208,31 +209,9 @@ public class UrlListActivity extends AppCompatActivity {
     }
 
     public void refreshAll(){
-        ArrayList<UrlItem> items = new ArrayList<>();
-        items.addAll(
-                application
-                        .dataBase
-                        .urlItemDao()
-                        .getAll()
-        );
-        for(int i =0; i<items.size(); i++){
-            refreshSingle(items.get(i));
-        }
+        Intent intent = new Intent(this, RssItemFisherService.class);
+        startService(intent);
     }
-
-    public void refreshSingle(UrlItem item){
-        try {
-            Intent intent = new Intent(this, RssItemFisherService.class);
-            intent.putExtra("Title", item.getTitle() );
-            intent.putExtra("Url"  , item.getUrl()   );
-            intent.putExtra("Id"   , item.getId()    );
-
-            startService(intent);
-        } catch (Exception e){
-            Log.e(TAG, e.getLocalizedMessage());
-        }
-    }
-
     public void setupDelay(){
         application
                 .dataBase
